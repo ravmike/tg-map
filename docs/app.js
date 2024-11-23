@@ -32,10 +32,46 @@ locations.forEach(function (location) {
     .bindPopup(`<b>${location.name}</b><br>${location.description}`);
 });
 
-// Fit the map view to the markers
-var group = new L.featureGroup(
-  locations.map(function (location) {
-    return L.marker(location.coords);
-  })
-);
+// Function to add user's location dynamically
+function addUserLocation() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // Custom icon for user's location (optional)
+        var userIcon = L.icon({
+          iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png', // Example icon URL
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+        });
+
+        // Add a marker for the user's location
+        L.marker([latitude, longitude], { icon: userIcon })
+          .addTo(map)
+          .bindPopup('<b>Your Location</b>');
+
+        // Center the map on the user's location
+        map.setView([latitude, longitude], 13);
+      },
+      function (error) {
+        console.error('Error obtaining location:', error);
+        alert('Unable to retrieve your location.');
+      }
+    );
+  } else {
+    alert('Geolocation is not supported by your browser.');
+  }
+}
+
+// Call the function to add user's location
+addUserLocation();
+
+// Fit the map view to show all markers (optional)
+var allMarkers = locations.map(function (location) {
+  return L.marker(location.coords);
+});
+
+var group = L.featureGroup(allMarkers);
 map.fitBounds(group.getBounds().pad(0.5));
