@@ -40,7 +40,97 @@ locations.forEach(function (location) {
   marker.bindPopup(popupContent);
 });
 
-// Function to navigate to a destination
+// Variable to store the compass marker
+var compassMarker;
+
+// Function to handle device orientation and update compass
+function handleOrientation(event) {
+  var alpha = event.alpha; // Rotation around z-axis (0 to 360 degrees)
+  var rotation = alpha ? alpha : 0; // Use alpha directly for rotation
+
+  // Update the compass marker's rotation angle
+  if (compassMarker) {
+    compassMarker.setRotationAngle(rotation);
+  }
+}
+
+// Function to request device orientation
+function requestDeviceOrientation() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ devices
+    DeviceOrientationEvent.requestPermission()
+      .then((permissionState) => {
+        if (permissionState === 'granted') {
+          document.getElementById('enable-button').style.display = 'none';
+          window.addEventListener('deviceorientation', handleOrientation, true);
+        } else {
+          alert('Permission to access device orientation was denied.');
+        }
+      })
+      .catch(console.error);
+  } else {
+    // Non iOS 13+ devices
+    document.getElementById('enable-button').style.display = 'none';
+    window.addEventListener('deviceorientation', handleOrientation, true);
+  }
+}
+
+// Function to add user's location and compass
+function addUserLocation() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // Custom icon for the compass marker
+        var compassIcon = L.icon({
+          iconUrl: 'assets/compass.png',
+          iconSize: [20, 20],
+          iconAnchor: [25, 25],
+        });
+
+        // Add the compass marker at the user's location with initial rotation
+        compassMarker = L.marker([latitude, longitude], {
+          icon: compassIcon,
+          rotationAngle: 0, // Initial rotation
+          rotationOrigin: 'center',
+        }).addTo(map);
+
+        // Center the map on the user's location
+        map.setView([latitude, longitude], 16);
+
+        // Request device orientation permission if necessary
+        requestDeviceOrientation();
+      },
+      function (error) {
+        console.error('Error obtaining location:', error);
+        alert('Unable to retrieve your location.');
+      }
+    );
+  } else {
+    alert('Geolocation is not supported by your browser.');
+  }
+}
+
+function generateNavigationURL(currentLatitude, currentLongitude, destLatitude, destLongitude) {
+  var ua = navigator.userAgent.toLowerCase();
+  var url = '';
+
+  if (/iphone|ipad|ipod/.test(ua)) {
+    // Apple Maps URL
+    url = `http://maps.apple.com/?saddr=${currentLatitude},${currentLongitude}&daddr=${destLatitude},${destLongitude}&dirflg=d`;
+  } else if (/android/.test(ua)) {
+    // Google Maps URL
+    url = `https://maps.google.com/maps?daddr=${destLatitude},${destLongitude}&saddr=${currentLatitude},${currentLongitude}&directionsmode=driving`;
+  } else {
+    // Default to Google Maps in browser
+    url = `https://www.google.com/maps/dir/?api=1&origin=${currentLatitude},${currentLongitude}&destination=${destLatitude},${destLongitude}&travelmode=driving`;
+  }
+
+  return url;
+}
+
 function navigateTo(destLatitude, destLongitude) {
   // Check if geolocation is available
   if ('geolocation' in navigator) {
@@ -64,27 +154,19 @@ function navigateTo(destLatitude, destLongitude) {
   }
 }
 
-function generateNavigationURL(destLatitude, destLongitude) {
-  var url = `intent://maps.google.com/maps?daddr=${destLatitude},${destLongitude}#Intent;scheme=https;package=com.google.android.apps.maps;end`;
-  return url;
+
+// Call the function to add user's location and compass
+addUserLocation();
+
+// Fit the map view to show all markers (optional)
+var allMarkers = locations.map(function (location) {
+  return L.marker(location.coords);
+});
+
+// Include the compass marker if it exists
+if (compassMarker) {
+  allMarkers.push(compassMarker);
 }
 
-// // Function to generate the navigation URL
-// function generateNavigationURL(currentLatitude, currentLongitude, destLatitude, destLongitude) {
-  
-//   var ua = navigator.userAgent.toLowerCase();
-//   var url = '';
-
-//   if (/iphone|ipad|ipod/.test(ua)) {
-//     // Apple Maps URL
-//     url = `http://maps.apple.com/?saddr=${currentLatitude},${currentLongitude}&daddr=${destLatitude},${destLongitude}&dirflg=d`;
-//   } else if (/android/.test(ua)) {
-//     // Google Maps URL
-//     url = `https://maps.google.com/maps?daddr=${destLatitude},${destLongitude}&saddr=${currentLatitude},${currentLongitude}&directionsmode=driving`;
-//   } else {
-//     // Default to Google Maps in browser
-//     url = `https://www.google.com/maps/dir/?api=1&origin=${currentLatitude},${currentLongitude}&destination=${destLatitude},${destLongitude}&travelmode=driving`;
-//   }
-
-//   return url;
-// }
+var group = L.featureGroup(allMarkers);
+map.fitBounds(group.getBounds().pad(0.5));
