@@ -64,21 +64,27 @@ function navigateTo(destLatitude, destLongitude) {
   }
 }
 
-// Function to generate the navigation URL
-function generateNavigationURL(currentLatitude, currentLongitude, destLatitude, destLongitude) {
-  var ua = navigator.userAgent.toLowerCase();
-  var url = '';
-
-  if (/iphone|ipad|ipod/.test(ua)) {
-    // Apple Maps URL
-    url = `http://maps.apple.com/?saddr=${currentLatitude},${currentLongitude}&daddr=${destLatitude},${destLongitude}&dirflg=d`;
-  } else if (/android/.test(ua)) {
-    // Google Maps URL
-    url = `https://maps.google.com/maps?daddr=${destLatitude},${destLongitude}&saddr=${currentLatitude},${currentLongitude}&directionsmode=driving`;
-  } else {
-    // Default to Google Maps in browser
-    url = `https://www.google.com/maps/dir/?api=1&origin=${currentLatitude},${currentLongitude}&destination=${destLatitude},${destLongitude}&travelmode=driving`;
-  }
-
+function generateNavigationURL(destLatitude, destLongitude) {
+  var url = `intent://maps.google.com/maps?daddr=${destLatitude},${destLongitude}#Intent;scheme=https;package=com.google.android.apps.maps;end`;
   return url;
 }
+
+// // Function to generate the navigation URL
+// function generateNavigationURL(currentLatitude, currentLongitude, destLatitude, destLongitude) {
+  
+//   var ua = navigator.userAgent.toLowerCase();
+//   var url = '';
+
+//   if (/iphone|ipad|ipod/.test(ua)) {
+//     // Apple Maps URL
+//     url = `http://maps.apple.com/?saddr=${currentLatitude},${currentLongitude}&daddr=${destLatitude},${destLongitude}&dirflg=d`;
+//   } else if (/android/.test(ua)) {
+//     // Google Maps URL
+//     url = `https://maps.google.com/maps?daddr=${destLatitude},${destLongitude}&saddr=${currentLatitude},${currentLongitude}&directionsmode=driving`;
+//   } else {
+//     // Default to Google Maps in browser
+//     url = `https://www.google.com/maps/dir/?api=1&origin=${currentLatitude},${currentLongitude}&destination=${destLatitude},${destLongitude}&travelmode=driving`;
+//   }
+
+//   return url;
+// }
