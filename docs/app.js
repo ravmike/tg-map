@@ -32,6 +32,20 @@ locations.forEach(function (location) {
     .bindPopup(`<b>${location.name}</b><br>${location.description}`);
 });
 
+// Variable to store the compass marker
+var compassMarker;
+
+// Function to handle device orientation and update compass
+function handleOrientation(event) {
+  var alpha = event.alpha; // Rotation around z-axis (0 to 360 degrees)
+  var rotation = alpha ? alpha : 0; // Use alpha directly for rotation
+
+  // Update the compass marker's rotation angle
+  if (compassMarker) {
+    compassMarker.setRotationAngle(rotation);
+  }
+}
+
 // Function to request device orientation
 function requestDeviceOrientation() {
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -53,20 +67,6 @@ function requestDeviceOrientation() {
   }
 }
 
-// Function to handle device orientation and update compass
-function handleOrientation(event) {
-  var alpha = event.alpha; // Rotation around z-axis (0 to 360 degrees)
-  var rotation = alpha ? 360 - alpha : 0; // Adjust for compass direction
-
-  // Rotate the compass marker
-  if (compassMarker && compassMarker.getElement()) {
-    compassMarker.getElement().style.transform = `rotate(${rotation}deg)`;
-  }
-}
-
-// Variable to store the compass marker
-var compassMarker;
-
 // Function to add user's location and compass
 function addUserLocation() {
   if ('geolocation' in navigator) {
@@ -77,14 +77,17 @@ function addUserLocation() {
 
         // Custom icon for the compass marker
         var compassIcon = L.icon({
-          iconUrl: 'assets/compass.png', // Replace with your compass icon URL
-          iconSize: [50, 50],
+          iconUrl: 'assets/compass.png',
+          iconSize: [20, 20],
           iconAnchor: [25, 25],
-          className: 'rotate', // Add a custom class for rotation
         });
 
-        // Add the compass marker at the user's location
-        compassMarker = L.marker([latitude, longitude], { icon: compassIcon }).addTo(map);
+        // Add the compass marker at the user's location with initial rotation
+        compassMarker = L.marker([latitude, longitude], {
+          icon: compassIcon,
+          rotationAngle: 0, // Initial rotation
+          rotationOrigin: 'center',
+        }).addTo(map);
 
         // Center the map on the user's location
         map.setView([latitude, longitude], 16);
