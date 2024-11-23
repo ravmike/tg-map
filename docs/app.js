@@ -132,6 +132,19 @@ function generateNavigationURL(currentLatitude, currentLongitude, destLatitude, 
 }
 
 function navigateTo(destLatitude, destLongitude) {
+  // Generate the navigation URL
+  var url = generateNavigationURL(destLatitude, destLongitude);
+
+  // Open the link using Telegram's openLink method
+  if (window.Telegram && Telegram.WebApp && Telegram.WebApp.openLink) {
+    Telegram.WebApp.openLink(url);
+  } else {
+    // Fallback for when not in Telegram
+    window.open(url, '_blank');
+  }
+}
+
+function navigateTo(destLatitude, destLongitude) {
   // Check if geolocation is available
   if ('geolocation' in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -142,8 +155,13 @@ function navigateTo(destLatitude, destLongitude) {
         // Generate the navigation URL
         var url = generateNavigationURL(currentLatitude, currentLongitude, destLatitude, destLongitude);
 
-        // Open the navigation app
-        window.location.href = url;
+        // Open the link using Telegram's openLink method
+        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.openLink) {
+          Telegram.WebApp.openLink(url);
+        } else {
+          // Fallback for when not in Telegram
+          window.open(url, '_blank');
+        }
       },
       function (error) {
         alert('Unable to retrieve your current location.');
