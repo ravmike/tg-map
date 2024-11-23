@@ -32,7 +32,42 @@ locations.forEach(function (location) {
     .bindPopup(`<b>${location.name}</b><br>${location.description}`);
 });
 
-// Function to add user's location dynamically
+// Function to request device orientation
+function requestDeviceOrientation() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ devices
+    DeviceOrientationEvent.requestPermission()
+      .then((permissionState) => {
+        if (permissionState === 'granted') {
+          document.getElementById('enable-button').style.display = 'none';
+          window.addEventListener('deviceorientation', handleOrientation, true);
+        } else {
+          alert('Permission to access device orientation was denied.');
+        }
+      })
+      .catch(console.error);
+  } else {
+    // Non iOS 13+ devices
+    document.getElementById('enable-button').style.display = 'none';
+    window.addEventListener('deviceorientation', handleOrientation, true);
+  }
+}
+
+// Function to handle device orientation and update compass
+function handleOrientation(event) {
+  var alpha = event.alpha; // Rotation around z-axis (0 to 360 degrees)
+  var rotation = alpha ? 360 - alpha : 0; // Adjust for compass direction
+
+  // Rotate the compass marker
+  if (compassMarker && compassMarker.getElement()) {
+    compassMarker.getElement().style.transform = `rotate(${rotation}deg)`;
+  }
+}
+
+// Variable to store the compass marker
+var compassMarker;
+
+// Function to add user's location and compass
 function addUserLocation() {
   if ('geolocation' in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -40,20 +75,22 @@ function addUserLocation() {
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
 
-        // Custom icon for user's location (optional)
-        var userIcon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png', // Example icon URL
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
+        // Custom icon for the compass marker
+        var compassIcon = L.icon({
+          iconUrl: 'assets/compass.png', // Replace with your compass icon URL
+          iconSize: [50, 50],
+          iconAnchor: [25, 25],
+          className: 'rotate', // Add a custom class for rotation
         });
 
-        // Add a marker for the user's location
-        L.marker([latitude, longitude], { icon: userIcon })
-          .addTo(map)
-          .bindPopup('<b>Your Location</b>');
+        // Add the compass marker at the user's location
+        compassMarker = L.marker([latitude, longitude], { icon: compassIcon }).addTo(map);
 
         // Center the map on the user's location
-        map.setView([latitude, longitude], 13);
+        map.setView([latitude, longitude], 16);
+
+        // Request device orientation permission if necessary
+        requestDeviceOrientation();
       },
       function (error) {
         console.error('Error obtaining location:', error);
@@ -65,13 +102,18 @@ function addUserLocation() {
   }
 }
 
-// Call the function to add user's location
+// Call the function to add user's location and compass
 addUserLocation();
 
 // Fit the map view to show all markers (optional)
 var allMarkers = locations.map(function (location) {
   return L.marker(location.coords);
 });
+
+// Include the compass marker if it exists
+if (compassMarker) {
+  allMarkers.push(compassMarker);
+}
 
 var group = L.featureGroup(allMarkers);
 map.fitBounds(group.getBounds().pad(0.5));

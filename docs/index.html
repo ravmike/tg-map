@@ -21,11 +21,29 @@
             padding: 0;
             margin: 0;
         }
-    </style>
+        /* Add styles for the enable button */
+        #enable-button {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: #0078FF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .rotate {
+            transform-origin: center;
+        }
+        </style>
 </head>
 <body>
     <!-- Map Container -->
     <div id="map"></div>
+
+    <button id="enable-button" onclick="requestDeviceOrientation()">Enable Compass</button>
 
     <!-- Include Leaflet JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
